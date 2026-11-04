@@ -4,51 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aktivasi Aplikasi</title>
-    <!-- Tailwind CSS untuk tampilan modern -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK (Compat Version) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        /* Menghilangkan efek bayangan/highlight biru saat tombol/input disentuh di HP */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        input:focus, button:focus {
+            outline: none;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
 
-    <div class="bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-700">
-        <h2 class="text-2xl font-bold text-center mb-2">Aktivasi Aplikasi</h2>
-        <p class="text-slate-400 text-sm text-center mb-6">Masukkan 16 digit kode unik dari aplikasi Anda.</p>
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold tracking-tight mb-1">Aktivasi Aplikasi</h2>
+            <p class="text-slate-400 text-sm">Masukkan 16 digit kode unik dari aplikasi Anda.</p>
+        </div>
 
         <!-- Form Input -->
         <div id="form-section">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-300 mb-2">Kode Aktivasi (16 Digit)</label>
+            <div class="mb-5">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Kode Aktivasi (16 Digit)</label>
                 <input type="text" id="activationCode" maxlength="16" placeholder="contoh: ab12cd34ef56gh78" 
-                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 lowercase text-center tracking-widest text-lg">
+                    class="w-full px-4 py-3.5 bg-slate-950 border border-slate-800 rounded-xl focus:border-indigo-500 lowercase text-center tracking-widest text-lg transition-colors placeholder:text-slate-700 placeholder:normal-case placeholder:tracking-normal">
             </div>
             <button onclick="startActivation()" 
-                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-lg shadow-indigo-600/30">
+                class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold py-3.5 rounded-xl transition duration-150 shadow-lg shadow-indigo-600/20">
                 Aktivasi Sekarang
             </button>
         </div>
 
         <!-- Loading Section -->
         <div id="loading-section" class="hidden text-center py-6">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-indigo-500 border-solid mb-4"></div>
-            <p class="text-slate-200 font-semibold text-lg">Memproses Aktivasi...</p>
-            <p id="countdown-text" class="text-indigo-400 font-mono text-sm mt-2">Menyiapkan server...</p>
-            <p class="text-xs text-slate-400 mt-4 leading-relaxed">
-                Mohon jangan tutup halaman ini. Proses verifikasi acak memakan waktu antara 1 hingga 30 menit.
-            </p>
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-500 border-solid mb-4"></div>
+            <p class="text-slate-200 font-medium">Memproses Aktivasi...</p>
+            <p class="text-xs text-slate-500 mt-2">Mohon tunggu sebentar, sistem sedang memverifikasi perangkat.</p>
         </div>
 
         <!-- Success Section -->
         <div id="success-section" class="hidden text-center py-6">
-            <div class="text-green-400 text-6xl mb-3">✓</div>
-            <h3 class="text-xl font-bold text-green-400 mb-1">Aktivasi Berhasil!</h3>
-            <p class="text-sm text-slate-300">Silakan kembali ke aplikasi Anda. Aplikasi akan otomatis terbuka ke menu utama.</p>
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 text-2xl mb-3">✓</div>
+            <h3 class="text-lg font-bold text-emerald-400 mb-1">Aktivasi Berhasil!</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Silakan kembali ke aplikasi Anda. Aplikasi akan otomatis terbuka ke menu utama.</p>
         </div>
     </div>
 
     <script>
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyCp7IdKTm6_Bt3k861gfHVY_vQwKRDgYl0",
             authDomain: "activation-code-1c10c.firebaseapp.com",
@@ -60,7 +65,6 @@
             measurementId: "G-44GRRXW5WF"
         };
 
-        // Inisialisasi Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -72,35 +76,13 @@
                 return;
             }
 
-            // Cek apakah kode terdaftar di Firebase
             db.ref('activations/' + codeInput).once('value', (snapshot) => {
                 if (snapshot.exists()) {
-                    // Sembunyikan form, tampilkan loading
                     document.getElementById('form-section').classList.add('hidden');
                     document.getElementById('loading-section').classList.remove('hidden');
 
-                    // Waktu acak antara 1 menit (60000 ms) hingga 30 menit (1800000 ms)
-                    const minTime = 60000;   // 1 Menit
-                    const maxTime = 1800000; // 30 Menit
-                    const randomDelay = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
-
-                    let timeLeft = Math.floor(randomDelay / 1000); // dalam detik
-                    
-                    // Update teks hitung mundur tiap detik agar terlihat interaktif
-                    const countdownInterval = setInterval(() => {
-                        let minutes = Math.floor(timeLeft / 60);
-                        let seconds = timeLeft % 60;
-                        document.getElementById('countdown-text').innerText = 
-                            `Estimasi waktu: ${minutes} menit ${seconds < 10 ? '0' : ''}${seconds} detik lagi`;
-                        
-                        if (timeLeft > 0) {
-                            timeLeft--;
-                        }
-                    }, 1000);
-
-                    // Eksekusi perubahan ke database setelah waktu random selesai
+                    // Waktu verifikasi pas 3 detik (3000 ms)
                     setTimeout(() => {
-                        clearInterval(countdownInterval);
                         db.ref('activations/' + codeInput).update({
                             status: "success"
                         }, (error) => {
@@ -112,10 +94,10 @@
                                 location.reload();
                             }
                         });
-                    }, randomDelay);
+                    }, 3000);
 
                 } else {
-                    alert("Kode aktivasi tidak valid! Pastikan Anda membuka aplikasi dan menyalin kode yang muncul di layar HP Anda.");
+                    alert("Kode aktivasi tidak valid! Pastikan Anda membuka aplikasi dan menyalin kode terbaru.");
                 }
             });
         }
